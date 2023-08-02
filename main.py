@@ -39,40 +39,20 @@ def build_graph_with_loading_bar(progress_bar, progress_label):
     # TODO: "Graph building is com"
     wx.CallAfter(progress_label.SetLabel, "Graph building is complete.")
 
-"""
-========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================= 
-"""
 
-
+"""========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================="""
 # Class used for creating frames other than the main one
 class OtherFrame(wx.Frame):
     def __init__(self, title, parent=None):
         wx.Frame.__init__(self, parent=parent, title=title)
         self.Show()
-
-
-"""
-========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================= 
-"""
+"""============================================================================================"""
 
 # Create GUI app
-# TODO: this is the main frame
 class GameGraphTraversalApp(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(GameGraphTraversalApp, self).__init__(*args, **kwargs)
-
         self.InitUI()
-        """
-        this code puts button on frame that creates new windows
-        btn = wx.Button(self, label='Create New Frame')
-        btn.Bind(wx.EVT_BUTTON, self.on_new_frame)
-        self.frame_number = 1
-
-    def on_new_frame(self, event):
-        title = 'SubFrame {}'.format(self.frame_number)
-        frame = OtherFrame(title=title)
-        self.frame_number += 1
-        """
 
     def InitUI(self):
         self.SetTitle("Video Game Graph Traversal")
@@ -115,10 +95,6 @@ class GameGraphTraversalApp(wx.Frame):
         clear_results_button = wx.Button(panel, label="Clear Results", size=(150, -1))
         clear_results_button.Bind(wx.EVT_BUTTON, self.OnClearResults)
 
-        #new button
-        # new_window_button = wx.Button(panel, label = "open new window", size =(150,150))
-        # new_window_button.Bind(wx.EVT_BUTTON, self.on_new_frame)
-
         # Sizers for layout
         sizer = wx.BoxSizer(wx.VERTICAL)
         genre_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -156,9 +132,8 @@ class GameGraphTraversalApp(wx.Frame):
     # TODO: implement new window of results showing the first 150 nodes in the traversal
     def on_new_frame(self, event):
         title = 'Subframe {}'.format("stinky")
-        frame = OtherFrame(title="stinky")
+        frame = OtherFrame(title="stinky",parent=wx.GetTopLevelParent(self))
         event.Skip()
-
 
     def OnBuildGraph(self, event):
         self.graph_progress_bar.SetValue(0)
@@ -273,7 +248,7 @@ class GameGraphTraversalApp(wx.Frame):
         self.result_text.AppendText("Depth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
         self.result_text.AppendText("---------------------------------------\n")
         self.dfs_traversal(graph.get(self.genre_var.GetValue(), []), "")
-        event.skip()
+        event.Skip()
 
 
     def OnClearResults(self, event):
