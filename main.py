@@ -3,9 +3,6 @@ import wx
 import pandas as pd
 import time
 
-# ernesto wuz here
-# L337
-
 # Replace 'your_dataset.csv' with the actual path to your CSV file
 file_path = r'game_data.csv'
 
@@ -19,6 +16,7 @@ graph = {}
 
 # Function to build the graph with loading bar
 def build_graph_with_loading_bar(progress_bar, progress_label):
+    progress_label.SetLabel("Graph is being built...")
     loading_length = len(df)
     chunk_size = max(1, loading_length // 100)  # Split the data into 100 chunks
     progress_bar.SetRange(loading_length)
@@ -37,15 +35,44 @@ def build_graph_with_loading_bar(progress_bar, progress_label):
                     graph[genre].append(game_name)
         wx.CallAfter(progress_bar.SetValue, i + chunk_size)
 
+    # TODO: might have visual bug upon graph completion that reads:
+    # TODO: "Graph building is com"
     wx.CallAfter(progress_label.SetLabel, "Graph building is complete.")
 
+"""
+========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================= 
+"""
+
+
+# Class used for creating frames other than the main one
+class OtherFrame(wx.Frame):
+    def __init__(self, title, parent=None):
+        wx.Frame.__init__(self, parent=parent, title=title)
+        self.Show()
+
+
+"""
+========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================= 
+"""
 
 # Create GUI app
+# TODO: this is the main frame
 class GameGraphTraversalApp(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(GameGraphTraversalApp, self).__init__(*args, **kwargs)
 
         self.InitUI()
+        """
+        this code puts button on frame that creates new windows
+        btn = wx.Button(self, label='Create New Frame')
+        btn.Bind(wx.EVT_BUTTON, self.on_new_frame)
+        self.frame_number = 1
+
+    def on_new_frame(self, event):
+        title = 'SubFrame {}'.format(self.frame_number)
+        frame = OtherFrame(title=title)
+        self.frame_number += 1
+        """
 
     def InitUI(self):
         self.SetTitle("Video Game Graph Traversal")
@@ -65,7 +92,7 @@ class GameGraphTraversalApp(wx.Frame):
         build_graph_button.Bind(wx.EVT_BUTTON, self.OnBuildGraph)
 
         # Progress bar for graph building
-        self.graph_progress_label = wx.StaticText(panel, label="Graph is being built...")
+        self.graph_progress_label = wx.StaticText(panel, label="")
         self.graph_progress_bar = wx.Gauge(panel, range=1, size=(500, 25))
 
         # Start Traversals buttons
@@ -73,6 +100,7 @@ class GameGraphTraversalApp(wx.Frame):
         bfs_button.Bind(wx.EVT_BUTTON, self.OnStartBFS)
         dfs_button = wx.Button(panel, label="Depth First Search", size=(150, -1))
         dfs_button.Bind(wx.EVT_BUTTON, self.OnStartDFS)
+        dfs_button.Bind(wx.EVT_BUTTON, self.on_new_frame)
 
         # Progress bars for BFS and DFS traversals
         self.bfs_progress_label = wx.StaticText(panel, label="Breadth First Search")
@@ -86,6 +114,10 @@ class GameGraphTraversalApp(wx.Frame):
         # Clear Results button
         clear_results_button = wx.Button(panel, label="Clear Results", size=(150, -1))
         clear_results_button.Bind(wx.EVT_BUTTON, self.OnClearResults)
+
+        #new button
+        # new_window_button = wx.Button(panel, label = "open new window", size =(150,150))
+        # new_window_button.Bind(wx.EVT_BUTTON, self.on_new_frame)
 
         # Sizers for layout
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -120,6 +152,13 @@ class GameGraphTraversalApp(wx.Frame):
         sizer.Add(clear_button_sizer, proportion=0, flag=wx.EXPAND)
 
         panel.SetSizer(sizer)
+
+    # TODO: implement new window of results showing the first 150 nodes in the traversal
+    def on_new_frame(self, event):
+        title = 'Subframe {}'.format("stinky")
+        frame = OtherFrame(title="stinky")
+        event.Skip()
+
 
     def OnBuildGraph(self, event):
         self.graph_progress_bar.SetValue(0)
@@ -177,7 +216,7 @@ class GameGraphTraversalApp(wx.Frame):
         self.bfs_progress_bar.SetRange(len(starting_nodes))
         bfs_thread = threading.Thread(target= self.bfs_helper, args=(starting_nodes, result_text))
         bfs_thread.start()
-#change change
+
     def dfs_helper(self, starting_nodes, result_text):
         start_time = time.time()
         dfs_games_traversed = set()
@@ -218,6 +257,7 @@ class GameGraphTraversalApp(wx.Frame):
 
         wx.CallAfter(self.result_text.AppendText, result_text)
 
+
     #This is the function that calls the helper function and makes the thread
     def dfs_traversal(self, starting_nodes, result_text):
         self.dfs_progress_bar.SetRange(len(starting_nodes))
@@ -233,6 +273,8 @@ class GameGraphTraversalApp(wx.Frame):
         self.result_text.AppendText("Depth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
         self.result_text.AppendText("---------------------------------------\n")
         self.dfs_traversal(graph.get(self.genre_var.GetValue(), []), "")
+        event.skip()
+
 
     def OnClearResults(self, event):
         self.result_text.Clear()
