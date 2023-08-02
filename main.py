@@ -3,6 +3,9 @@ import wx
 import pandas as pd
 import time
 
+# ernesto wuz here
+# L337
+
 # Replace 'your_dataset.csv' with the actual path to your CSV file
 file_path = r'game_data.csv'
 
@@ -115,8 +118,7 @@ class GameGraphTraversalApp(wx.Frame):
         sizer.Add(dfs_sizer, proportion=0, flag=wx.EXPAND)
         sizer.Add(self.result_text, proportion=1, flag=wx.EXPAND)
         sizer.Add(clear_button_sizer, proportion=0, flag=wx.EXPAND)
-# please please please work
-# changes changes changes
+
         panel.SetSizer(sizer)
 
     def OnBuildGraph(self, event):
