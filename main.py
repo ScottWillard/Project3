@@ -39,13 +39,41 @@ def build_graph_with_loading_bar(progress_bar, progress_label):
     # TODO: "Graph building is com"
     wx.CallAfter(progress_label.SetLabel, "Graph building is complete.")
 
-
 """========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================="""
 # Class used for creating frames other than the main one
 class OtherFrame(wx.Frame):
-    def __init__(self, title, parent=None):
+
+    def __init__(self, title, parent):
+        # super().__init__(self, parent)
         wx.Frame.__init__(self, parent=parent, title=title)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.row_obj_dict = {}
+
+
+        self.list_ctrl = wx.ListCtrl(
+            self, size=(-1, 100),
+            style=wx.LC_REPORT | wx.BORDER_SUNKEN
+        )
+        self.list_ctrl.InsertColumn(0, 'Artist', width=140)
+        self.list_ctrl.InsertColumn(1, 'Album', width=140)
+        self.list_ctrl.InsertColumn(2, 'Title', width=200)
+        main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
+        edit_button = wx.Button(self, label='Edit')
+
+        edit_button.Bind(wx.EVT_BUTTON, self.on_edit)
+        main_sizer.Add(edit_button, 0, wx.ALL | wx.CENTER, 5)
+        self.SetSizer(main_sizer)
         self.Show()
+
+    def on_edit(self, event):
+        print('in on_edit')
+
+    def update_mp3_listing(self, folder_path):
+        print(folder_path)
+
+    # def __init__(self, title, parent=None):
+    #     wx.Frame.__init__(self, parent=parent, title=title)
+    #     self.Show()
 """============================================================================================"""
 
 # Create GUI app
@@ -206,7 +234,7 @@ class GameGraphTraversalApp(wx.Frame):
                 #this block of code controls the updating of the DFS progress bar
                 current_nodes = len(dfs_games_traversed)
                 progress_value = current_nodes  # Convert to integer
-                print(progress_value)
+                # print(progress_value)
                 wx.CallAfter(self.dfs_progress_bar.SetValue, progress_value)  # Update progress bar
                 time.sleep(interval)  # Adjust the interval for responsiveness
 
