@@ -3,6 +3,9 @@ import wx
 import pandas as pd
 import time
 
+# ernesto wuz here
+# L337
+
 # Replace 'your_dataset.csv' with the actual path to your CSV file
 file_path = r'game_data.csv'
 
