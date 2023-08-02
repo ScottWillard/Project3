@@ -177,7 +177,7 @@ class GameGraphTraversalApp(wx.Frame):
         self.bfs_progress_bar.SetRange(len(starting_nodes))
         bfs_thread = threading.Thread(target= self.bfs_helper, args=(starting_nodes, result_text))
         bfs_thread.start()
-
+#change change
     def dfs_helper(self, starting_nodes, result_text):
         start_time = time.time()
         dfs_games_traversed = set()
