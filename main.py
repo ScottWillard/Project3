@@ -4,7 +4,7 @@ import pandas as pd
 import time
 
 # Replace 'your_dataset.csv' with the actual path to your CSV file
-file_path = r'game_info.csv'
+file_path = r'game_data.csv'
 
 # Read the dataset into a pandas DataFrame
 # Specify dtype option to handle DtypeWarning
@@ -124,26 +124,30 @@ class GameGraphTraversalApp(wx.Frame):
                                                  args=(self.graph_progress_bar, self.graph_progress_label))
         graph_building_thread.start()
 
-    def bfs_traversal(self, starting_nodes, result_text):
+    def bfs_helper(self, starting_nodes, result_text):
         start_time = time.time()
         queue = []
         bfs_games_traversed = set()
 
+        interval = 0.0001
         for node in starting_nodes:
+            time.sleep(interval)  # Adjust the interval for responsiveness
             if node not in bfs_games_traversed:
                 bfs_games_traversed.add(node)
                 related_nodes = graph.get(node, [])
                 queue.extend(related_nodes)
 
+                #this block of code is responsible for updating the progress bar
+                current_nodes = len(bfs_games_traversed)
+                progress_value = current_nodes
+                wx.CallAfter(self.bfs_progress_bar.SetValue, progress_value)
+
+
         total_nodes = len(bfs_games_traversed)
-        interval = 0.1
+
         num_intervals = 100
 
         for i in range(num_intervals + 1):
-            current_nodes = len(bfs_games_traversed)
-            progress_value = int((current_nodes / total_nodes) * 100)
-            wx.CallAfter(self.bfs_progress_bar.SetValue, progress_value)
-            time.sleep(interval)  # Adjust the interval for responsiveness
             if i < num_intervals:
                 # Perform traversal for remaining nodes at each interval
                 for _ in range(int(total_nodes / num_intervals)):
@@ -155,6 +159,8 @@ class GameGraphTraversalApp(wx.Frame):
                         related_nodes = graph.get(node, [])
                         queue.extend(related_nodes)
 
+
+
         end_time = time.time()
         bfs_time_elapsed = end_time - start_time
         result_text += f"Breadth First Search Time Elapsed: {bfs_time_elapsed:.2f} Seconds\n"
@@ -162,26 +168,41 @@ class GameGraphTraversalApp(wx.Frame):
 
         wx.CallAfter(self.result_text.AppendText, result_text)
 
-    def dfs_traversal(self, starting_nodes, result_text):
+
+    #This is the function that is first called and creates a separate thread that runs the helper function
+    def bfs_traversal(self, starting_nodes, result_text):
+        self.bfs_progress_bar.SetRange(len(starting_nodes))
+        bfs_thread = threading.Thread(target= self.bfs_helper, args=(starting_nodes, result_text))
+        bfs_thread.start()
+
+    def dfs_helper(self, starting_nodes, result_text):
         start_time = time.time()
         dfs_games_traversed = set()
 
+        #I chose this value arbitrarily as it was a good blend of slowed down but not too slow
+        interval = 0.0001  # Update interval in seconds (adjust as needed)
         def dfs_recursive(node):
+
             if node not in dfs_games_traversed:
                 dfs_games_traversed.add(node)
+
+                #this block of code controls the updating of the DFS progress bar
+                current_nodes = len(dfs_games_traversed)
+                progress_value = current_nodes  # Convert to integer
+                print(progress_value)
+                wx.CallAfter(self.dfs_progress_bar.SetValue, progress_value)  # Update progress bar
+                time.sleep(interval)  # Adjust the interval for responsiveness
+
                 related_nodes = graph.get(node, [])
                 for related_node in related_nodes:
+
                     dfs_recursive(related_node)
 
         total_nodes = len(starting_nodes)
-        interval = 0.1  # Update interval in seconds (adjust as needed)
+
         num_intervals = 100
 
         for i in range(num_intervals + 1):
-            current_nodes = len(dfs_games_traversed)
-            progress_value = int((current_nodes / total_nodes) * 100)  # Convert to integer
-            wx.CallAfter(self.dfs_progress_bar.SetValue, progress_value)  # Update progress bar
-            time.sleep(interval)  # Adjust the interval for responsiveness
             if i < num_intervals:
                 # Perform traversal for remaining nodes at each interval
                 for node in starting_nodes:
@@ -193,6 +214,12 @@ class GameGraphTraversalApp(wx.Frame):
         result_text += f"Traversed {len(dfs_games_traversed)} {self.genre_var.GetValue()} games\n\n"
 
         wx.CallAfter(self.result_text.AppendText, result_text)
+
+    #This is the function that calls the helper function and makes the thread
+    def dfs_traversal(self, starting_nodes, result_text):
+        self.dfs_progress_bar.SetRange(len(starting_nodes))
+        dfs_thread = threading.Thread(target= self.dfs_helper, args=(starting_nodes, result_text))
+        dfs_thread.start()
 
     def OnStartBFS(self, event):
         self.result_text.AppendText("Breadth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
