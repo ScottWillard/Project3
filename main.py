@@ -115,7 +115,7 @@ class GameGraphTraversalApp(wx.Frame):
         sizer.Add(dfs_sizer, proportion=0, flag=wx.EXPAND)
         sizer.Add(self.result_text, proportion=1, flag=wx.EXPAND)
         sizer.Add(clear_button_sizer, proportion=0, flag=wx.EXPAND)
-
+# please please please work
         panel.SetSizer(sizer)
 
     def OnBuildGraph(self, event):
