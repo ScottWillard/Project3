@@ -40,38 +40,42 @@ def build_graph_with_loading_bar(progress_bar, progress_label):
 
 """========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================="""
 
-class OtherFrame(wx.Frame):
-    def __init__(self, title, parent):
-        wx.Frame.__init__(self, parent=parent, title=title, size=(800,500))
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.row_obj_dict = {}
 
-        self.list_ctrl = wx.ListCtrl(
-            self, size=(-1, 500),
-            style=wx.LC_REPORT | wx.BORDER_SUNKEN
-        )
-
-        self.list_ctrl.InsertColumn(0, 'Name', width=230)
-        self.list_ctrl.InsertColumn(1, 'Genre', width=100)
-
-        main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-
-        self.SetSizer(main_sizer)
-        self.Show()
-
-    def update_game_list(self, games_data):
-        self.list_ctrl.DeleteAllItems()  # Clear previous items (if any)
-
-        index = 0
-        for game_name, genre in games_data:
-            self.list_ctrl.InsertItem(index, game_name)
-            self.list_ctrl.SetItem(index, 1, genre)
-            index += 1
 
 """============================================================================================"""
 
 # Create GUI app
 class GameGraphTraversalApp(wx.Frame):
+    class ResultingList(wx.Frame):
+        def __init__(self, title, parent):
+            wx.Frame.__init__(self, parent=parent, title=title, size=(800, 500))
+            main_sizer = wx.BoxSizer(wx.VERTICAL)
+            self.row_obj_dict = {}
+
+            self.list_ctrl = wx.ListCtrl(
+                self, size=(-1, 500),
+                style=wx.LC_REPORT | wx.BORDER_SUNKEN
+            )
+
+            self.list_ctrl.InsertColumn(0, 'Name', width=600)
+            self.list_ctrl.InsertColumn(1, 'Genre', width=200)
+
+            main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
+
+            self.SetSizer(main_sizer)
+            # self.Show()
+
+        def update_game_list(self, games_data):
+            self.list_ctrl.DeleteAllItems()  # Clear previous items (if any)
+
+            index = 0
+            for game_name, genre in games_data:
+                self.list_ctrl.InsertItem(index, game_name)
+                self.list_ctrl.SetItem(index, 1, genre)
+                index += 1
+
+        def show_game_results(self):
+            self.Show()
     def __init__(self, *args, **kwargs):
         super(GameGraphTraversalApp, self).__init__(*args, **kwargs)
         self.InitUI()
@@ -102,8 +106,6 @@ class GameGraphTraversalApp(wx.Frame):
         bfs_button.Bind(wx.EVT_BUTTON, self.OnStartBFS)
         dfs_button = wx.Button(panel, label="Depth First Search", size=(150, -1))
         dfs_button.Bind(wx.EVT_BUTTON, self.OnStartDFS)
-        dfs_button.Bind(wx.EVT_BUTTON, self.on_new_frame)
-        # FIXME: this is where the new list is created
 
         # Progress bars for BFS and DFS traversals
         self.bfs_progress_label = wx.StaticText(panel, label="Breadth First Search")
@@ -152,18 +154,18 @@ class GameGraphTraversalApp(wx.Frame):
 
         panel.SetSizer(sizer)
 
-    # TODO: implement new window of results showing the first 150 nodes in the traversal
-    def on_new_frame(self, event):
+    def generate_results_list(self):
 
         selected_genre = self.genre_var.GetValue()
 
         title = '{} Games'.format(selected_genre)
-        frame = OtherFrame(title, parent=wx.GetTopLevelParent(self))
+        results_list = self.ResultingList(title, parent=wx.GetTopLevelParent(self))
 
         games_data = [(game_name, selected_genre) for game_name in graph.get(selected_genre, [])]
 
-        frame.update_game_list(games_data)  # Pass the game data to the function
-        event.Skip()
+        results_list.update_game_list(games_data)  # Pass the game data to the function
+
+        return results_list
 
     def OnBuildGraph(self, event):
         self.graph_progress_bar.SetValue(0)
@@ -222,14 +224,13 @@ class GameGraphTraversalApp(wx.Frame):
         bfs_thread = threading.Thread(target= self.bfs_helper, args=(starting_nodes, result_text))
         bfs_thread.start()
 
-    def dfs_helper(self, starting_nodes, result_text):
+    def dfs_helper(self, starting_nodes, result_text, resulting_list_frame):
         start_time = time.time()
         dfs_games_traversed = set()
 
-        #I chose this value arbitrarily as it was a good blend of slowed down but not too slow
         interval = 0.0001  # Update interval in seconds (adjust as needed)
-        def dfs_recursive(node):
 
+        def dfs_recursive(node):
             if node not in dfs_games_traversed:
                 dfs_games_traversed.add(node)
 
@@ -241,7 +242,6 @@ class GameGraphTraversalApp(wx.Frame):
 
                 related_nodes = graph.get(node, [])
                 for related_node in related_nodes:
-
                     dfs_recursive(related_node)
 
         total_nodes = len(starting_nodes)
@@ -259,15 +259,19 @@ class GameGraphTraversalApp(wx.Frame):
         result_text += f"Depth First Search Time Elapsed: {dfs_time_elapsed:.2f} Seconds\n"
         result_text += f"Traversed {len(dfs_games_traversed)} {self.get_genre()} games\n\n"
 
+        # Update the game list and show the resulting list frame
+        # resulting_list_frame.update_game_list([(game_name, self.get_genre()) for game_name in dfs_games_traversed])
+        wx.CallAfter(resulting_list_frame.show_game_results)
+
         wx.CallAfter(self.result_text.AppendText, result_text)
 
     def get_genre(self):
         return self.genre_var.GetValue()
 
     #This is the function that calls the helper function and makes the thread
-    def dfs_traversal(self, starting_nodes, result_text):
+    def dfs_traversal(self, starting_nodes, result_text, results_list):
         self.dfs_progress_bar.SetRange(len(starting_nodes))
-        dfs_thread = threading.Thread(target= self.dfs_helper, args=(starting_nodes, result_text))
+        dfs_thread = threading.Thread(target= self.dfs_helper, args=(starting_nodes, result_text, results_list))
         dfs_thread.start()
 
     def OnStartBFS(self, event):
@@ -278,8 +282,8 @@ class GameGraphTraversalApp(wx.Frame):
     def OnStartDFS(self, event):
         self.result_text.AppendText("Depth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
         self.result_text.AppendText("---------------------------------------\n")
-        self.dfs_traversal(graph.get(self.genre_var.GetValue(), []), "")
-        event.Skip()
+        results_list = self.generate_results_list()
+        self.dfs_traversal(graph.get(self.genre_var.GetValue(), []), "", results_list)
 
     def OnClearResults(self, event):
         self.result_text.Clear()
