@@ -39,44 +39,34 @@ def build_graph_with_loading_bar(progress_bar, progress_label):
     wx.CallAfter(progress_label.SetLabel, "Graph building is complete.")
 
 """========================= NEW SECTION - RESULTS PANEL AFTER DFS/BFS ========================="""
-# Class used for creating frames other than the main one
-class OtherFrame(wx.Frame):
 
+class OtherFrame(wx.Frame):
     def __init__(self, title, parent):
-        # super().__init__(self, parent)
-        wx.Frame.__init__(self, parent=parent, title=title)
+        wx.Frame.__init__(self, parent=parent, title=title, size=(800,500))
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.row_obj_dict = {}
 
-
         self.list_ctrl = wx.ListCtrl(
-            self, size=(-1, 100),
+            self, size=(-1, 500),
             style=wx.LC_REPORT | wx.BORDER_SUNKEN
         )
 
-        self.list_ctrl.InsertColumn(0, 'Name', width=140)
-        self.list_ctrl.InsertColumn(1, 'Genre', width=140)
-
-
-        # self.list_ctrl.InsertItem(0, "Childish Gambino")
-        # self.list_ctrl.SetItem(0,1, "Because the Internet")
-        # self.list_ctrl.SetItem(0,2, "Flight of the Navigator")
+        self.list_ctrl.InsertColumn(0, 'Name', width=230)
+        self.list_ctrl.InsertColumn(1, 'Genre', width=100)
 
         main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(main_sizer)
-        # self.update_game_list()
         self.Show()
 
-    def update_game_list(self):
-        # self.list_ctrl.ClearAll()
+    def update_game_list(self, games_data):
+        self.list_ctrl.DeleteAllItems()  # Clear previous items (if any)
+
         index = 0
-        pass
-        # for game in graph[genre]:
-        #     self.list_ctrl.InsertItem(index, game)
-        #     pass
-        #     self.list_ctrl.SetItem(index, 1, genre)
-        #     index += 1
+        for game_name, genre in games_data:
+            self.list_ctrl.InsertItem(index, game_name)
+            self.list_ctrl.SetItem(index, 1, genre)
+            index += 1
 
 """============================================================================================"""
 
@@ -164,9 +154,15 @@ class GameGraphTraversalApp(wx.Frame):
 
     # TODO: implement new window of results showing the first 150 nodes in the traversal
     def on_new_frame(self, event):
-        title = 'Subframe {}'.format("stinky")
-        frame = OtherFrame(title,parent=wx.GetTopLevelParent(self))
-        frame.update_game_list()
+
+        selected_genre = self.genre_var.GetValue()
+
+        title = '{} Games'.format(selected_genre)
+        frame = OtherFrame(title, parent=wx.GetTopLevelParent(self))
+
+        games_data = [(game_name, selected_genre) for game_name in graph.get(selected_genre, [])]
+
+        frame.update_game_list(games_data)  # Pass the game data to the function
         event.Skip()
 
     def OnBuildGraph(self, event):
