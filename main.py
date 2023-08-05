@@ -167,11 +167,12 @@ class GameGraphTraversalApp(wx.Frame):
     """ =========================== MUTATORS =========================== """
     # FIXME: anyway to do this during traversal instead of after the fact?
     # Function adds names and genres of the games/nodes traversed in the graph to a list, for later displaying
-    def generate_results_list(self):
+    def generate_results_list(self, traversal_type):
 
         selected_genre = self.genre_var.GetValue()
 
-        title = '{} Games'.format(selected_genre)
+        # title = '{} Games'.format(selected_genre)
+        title = '{} - {} Games'.format(traversal_type, selected_genre)
         results_list = self.ResultingList(title, parent=wx.GetTopLevelParent(self))
 
         games_data = [(game_name, selected_genre) for game_name in graph.get(selected_genre, [])]
@@ -198,7 +199,7 @@ class GameGraphTraversalApp(wx.Frame):
     def OnStartBFS(self, event):
         self.result_text.AppendText("Breadth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
         self.result_text.AppendText("---------------------------------------\n")
-        results_list = self.generate_results_list()
+        results_list = self.generate_results_list("Breadth First")
         self.bfs_traversal(graph.get(self.genre_var.GetValue(), []), "", results_list)
 
     # This is the function called from OnStartBFS; creates a separate thread that then calls its bfs_helper function
@@ -262,7 +263,7 @@ class GameGraphTraversalApp(wx.Frame):
     def OnStartDFS(self, event):
         self.result_text.AppendText("Depth First Search Traversal of {} Games:\n".format(self.genre_var.GetValue()))
         self.result_text.AppendText("---------------------------------------\n")
-        results_list = self.generate_results_list()
+        results_list = self.generate_results_list("Depth First")
         self.dfs_traversal(graph.get(self.genre_var.GetValue(), []), "", results_list)
 
     # This is the function called from OnStartDFS; creates a separate thread that then calls its dfs_helper function
