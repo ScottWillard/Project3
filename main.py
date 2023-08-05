@@ -122,9 +122,11 @@ class GameGraphTraversalApp(wx.Frame):
 
 
     """ =========================== NESTED CLASS =========================== """
+
     # Defining parameters of the GUI frame that displays information on the traversed games
     class ResultingList(wx.Frame):
         def __init__(self, title, parent):
+            self.index = 0
             wx.Frame.__init__(self, parent=parent, title=title, size=(800, 500))
             main_sizer = wx.BoxSizer(wx.VERTICAL)
             self.row_obj_dict = {}
@@ -140,6 +142,12 @@ class GameGraphTraversalApp(wx.Frame):
             main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
 
             self.SetSizer(main_sizer)
+
+        # def insert_game(self, game_name, genre):
+        #     self.list_ctrl.InsertItem(self.index, game_name)
+        #     self.list_ctrl.SetItem(self.index, 1, genre)
+        #     self.index += 1
+
 
         def update_game_list(self, games_data):
 
@@ -157,27 +165,26 @@ class GameGraphTraversalApp(wx.Frame):
 
 
 
-    """ =========================== GETTERS =========================== """
+    """ =========================== MAIN FRAME GETTERS =========================== """
     # Getter function that returns what genre has been selected for traversal
     def get_genre(self):
         return self.genre_var.GetValue()
 
 
 
-    """ =========================== MUTATORS =========================== """
+    """ =========================== MAIN FRAME MUTATORS =========================== """
     # FIXME: anyway to do this during traversal instead of after the fact?
     # Function adds names and genres of the games/nodes traversed in the graph to a list, for later displaying
     def generate_results_list(self, traversal_type):
 
         selected_genre = self.genre_var.GetValue()
 
-        # title = '{} Games'.format(selected_genre)
         title = '{} - {} Games'.format(traversal_type, selected_genre)
         results_list = self.ResultingList(title, parent=wx.GetTopLevelParent(self))
-
-        games_data = [(game_name, selected_genre) for game_name in graph.get(selected_genre, [])]
-
-        results_list.update_game_list(games_data)  # Pass the game data to the function
+        #
+        # games_data = [(game_name, selected_genre) for game_name in graph.get(selected_genre, [])]
+        #
+        # results_list.update_game_list(games_data)  # Pass the game data to the function
 
         return results_list
 
@@ -210,7 +217,7 @@ class GameGraphTraversalApp(wx.Frame):
 
     # Function is called from bfs_traversal, returns information on nodes to user in main frame, and generates list
     # of nodes traversed
-    def bfs_helper(self, starting_nodes, result_text, resulting_list_frame):
+    def bfs_helper(self, starting_nodes, result_text, results_list):
         start_time = time.time()
         queue = []
         bfs_games_traversed = set()
@@ -252,7 +259,7 @@ class GameGraphTraversalApp(wx.Frame):
         result_text += f"Breadth First Search Time Elapsed: {bfs_time_elapsed:.2f} Seconds\n"
         result_text += f"Traversed {len(bfs_games_traversed)} {self.get_genre()} games\n\n"
 
-        wx.CallAfter(resulting_list_frame.show_game_results)
+        wx.CallAfter(results_list.show_game_results)
 
         wx.CallAfter(self.result_text.AppendText, result_text)
 
@@ -273,16 +280,20 @@ class GameGraphTraversalApp(wx.Frame):
         dfs_thread.start()
 
     # Function is called from dfs_traversal, returns information on nodes to user in main frame, and generates list
-    def dfs_helper(self, starting_nodes, result_text, resulting_list_frame):
+    def dfs_helper(self, starting_nodes, result_text, results_list):
         start_time = time.time()
         dfs_games_traversed = set()
 
         interval = 0.0001  # Update interval in seconds (adjust as needed)
 
-        def dfs_recursive(node):
+        index = 0
+
+        def dfs_recursive(node, index):
             if node not in dfs_games_traversed:
                 dfs_games_traversed.add(node)
-
+                results_list.list_ctrl.InsertItem(index, node)
+                results_list.list_ctrl.SetItem(index, 1, self.get_genre())
+                index += 1
                 # this block of code controls the updating of the DFS progress bar
                 current_nodes = len(dfs_games_traversed)
                 progress_value = current_nodes  # Convert to integer
@@ -291,7 +302,7 @@ class GameGraphTraversalApp(wx.Frame):
 
                 related_nodes = graph.get(node, [])
                 for related_node in related_nodes:
-                    dfs_recursive(related_node)
+                    dfs_recursive(related_node, index)
 
         total_nodes = len(starting_nodes)
 
@@ -301,17 +312,16 @@ class GameGraphTraversalApp(wx.Frame):
             if i < num_intervals:
                 # Perform traversal for remaining nodes at each interval
                 for node in starting_nodes:
-                    dfs_recursive(node)
+                    dfs_recursive(node, index)
 
         end_time = time.time()
         dfs_time_elapsed = end_time - start_time
         result_text += f"Depth First Search Time Elapsed: {dfs_time_elapsed:.2f} Seconds\n"
         result_text += f"Traversed {len(dfs_games_traversed)} {self.get_genre()} games\n\n"
 
-        wx.CallAfter(resulting_list_frame.show_game_results)
+        # wx.CallAfter(results_list.show_game_results)
 
         wx.CallAfter(self.result_text.AppendText, result_text)
-
 
 
 def main():
